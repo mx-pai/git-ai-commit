@@ -2,6 +2,7 @@
 
 # gac (Git AI Commit) - AI-powered Git commit message generator
 # Usage: gac [options]
+# Author: mx-pai
 
 set -euo pipefail
 
