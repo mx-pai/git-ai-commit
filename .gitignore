@@ -38,3 +38,7 @@ test_*.sh
 
 # Ignore Fish shell function backup
 cmt.fish.backup
+
+# Local Fish shell functions (user's personal shortcuts)
+cmt.fish
+install-fish-functions.sh

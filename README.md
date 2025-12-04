@@ -314,378 +314,51 @@ gac --config
 
 ### 快捷函数
 
-在 `~/.bashrc` 或 `~/.zshrc` 中添加常用快捷方式：
+GAC 提供了一系列实用的快捷函数，提升日常使用效率：
 
 ```bash
-# 快速提交所有修改
-function cmt() {
-    git add .
-    gac
-}
-
-# 提交并推送
-function cmp() {
-    git add .
-    gac && git push
-}
-
-# 只提交已暂存的更改（不自动 add）
-function gacstaged() {
-    gac
-}
-
-# 生成 commit message 但不提交（用于复制粘贴）
-function gacpreview() {
-    git add .
-    echo "$(gac --dry-run 2>&1 | grep -A 100 "Generated Commit Message:" | tail -n +4)"
-}
+cmt          # 添加所有更改并提交（最常用）
+cmp          # 添加、提交并推送到远程
+gac-preview  # 预览 commit message（不提交）
 ```
 
-添加后重新加载配置：
+**安装方式**：
+- **Bash/Zsh**: 添加到 `~/.bashrc` 或 `~/.zshrc`
+- **Fish**: 参考 [SHELL_FUNCTIONS.md](SHELL_FUNCTIONS.md#Fish-Shell)
+- **PowerShell**: 参考 [SHELL_FUNCTIONS.md](SHELL_FUNCTIONS.md)
+
+查看[完整快捷函数文档](SHELL_FUNCTIONS.md)了解更多实用函数。
+
+### 使用技巧
 
 ```bash
-source ~/.bashrc  # 或 source ~/.zshrc
-```
+# 切换语言
+LANGUAGE=en gac    # 英文
+LANGUAGE=zh gac    # 中文
 
-### Git 别名
+# 切换格式  
+COMMIT_FORMAT=simple gac      # 简单格式
+COMMIT_FORMAT=conventional gac  # 标准格式（默认）
 
-配置 Git 别名以便更方便使用：
-
-```bash
+# Git 别名（可选）
 git config --global alias.c '!git add -A && gac'
-git config --global alias.ac '!git add . && gac'
-git config --global alias.cmt '!gac'
 ```
 
-使用：
+详细使用技巧，请参考[完整使用指南](USAGE_GUIDE.md)
 
-```bash
-git c   # add all 并生成 commit message
-git ac  # 同上
-git cmt # 只对已暂存的更改生成 commit message
-```
-
-### 多语言切换
-
-快速切换语言（无需修改配置文件）：
-
-```bash
-# 临时使用英文
-LANGUAGE=en gac
-
-# 临时使用中文
-LANGUAGE=zh gac
-
-# 在 shell 配置中添加别名
-alias gac-en="LANGUAGE=en gac"
-alias gac-zh="LANGUAGE=zh gac"
-```
-
-### 不同 commit 格式
-
-```bash
-# 使用简单格式（单行）
-COMMIT_FORMAT=simple gac
-
-# 使用 conventional 格式
-COMMIT_FORMAT=conventional gac
-```
-
-### 配合其他 Git 工具
-
-#### 配合 Git 工作流
-
-```bash
-# Feature 分支开发
-git checkout -b feature/user-authentication
-git add .
-gac
-
-# Bug 修复
-git checkout -b fix/login-bug
-git add .
-gac
-
-# Hotfix
-git checkout -b hotfix/security-patch
-git add .
-gac
-```
-
-#### 配合 Git GUI
-
-如果你使用 Git GUI 工具（如 GitKraken、SourceTree），可以：
-
-1. 在 GUI 中进行代码更改
-2. 在终端中运行 `gac` 生成 commit message
-3. 复制生成的 message 到 GUI 中使用
 
 ## 🛠️ 故障排查
 
-### 常见问题
-
-#### 问题 1：AI 模型没有响应
-
-**症状**: 运行 `gac` 后显示 "Failed to get response from AI model"
-
-**解决方法**:
-
-1. **检查 API key**：
-   ```bash
-   cat ~/.config/gac.conf | grep AI_API_KEY
-   # 确保 key 正确且未过期
-   ```
-
-2. **测试 API 连通性**：
-   ```bash
-   # 替换为你的 API URL 和 key
-   curl -H "Authorization: Bearer sk-..." \
-        https://yunwu.ai/v1/models
-   ```
-
-3. **检查网络连接**：
-   ```bash
-   ping yunwu.ai
-   ```
-
-4. **如果使用 Claude CLI**：
-   ```bash
-   claude --version
-   # 检查版本 ≥ 0.5.0
-   claude "test"
-   # 测试 CLI 是否正常工作
-   ```
-
-5. **查看详细错误信息**：
-   ```bash
-   # 临时启用调试输出
-   bash -x $(which gac) 2>&1 | tail -20
-   ```
-
-#### 问题 2：`~/bin` 不在 PATH 中
-
-**症状**: 运行 `gac` 时显示 "command not found"
-
-**解决方法**:
-
-1. **检查 PATH**：
-   ```bash
-   echo $PATH
-   ```
-
-2. **添加到 PATH**：
-   ```bash
-   # 对于 Bash
-echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-
-# 对于 Zsh
-echo 'export PATH="$HOME/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-
-# 对于 Fish
-set -U fish_user_paths $HOME/bin $fish_user_paths
-```
-
-3. **直接使用完整路径**：
-   ```bash
-~/bin/gac
-```
-
-#### 问题 3：No staged changes found
-
-**症状**: 运行 `gac` 后显示 "No staged changes found"
-
-**原因**: 需要先使用 `git add` 暂存更改
-
-**解决方法**:
-
-```bash
-# 添加所有更改的文件
-git add .
-
-# 或者添加特定文件
-git add src/main.js tests/main.test.js
-
-# 再次运行 gac
-gac
-```
-
-#### 问题 4：Not a git repository
-
-**症状**: 运行 `gac` 后显示 "Not a git repository"
-
-**原因**: 当前目录不是 Git 仓库
-
-**解决方法**:
-
-```bash
-# 检查当前目录
-pwd
-
-# 如果你已经在 git 仓库中，检查 .git 目录
-ls -la | grep .git
-
-# 初始化 Git 仓库（如果是新项目）
-git init
-
-# 进入正确的项目目录
-cd /path/to/your/project
-```
-
-#### 问题 5：Empty commit message
-
-**症状**: 编辑 commit message 后提交失败
-
-**原因**: 编辑后保存空内容
-
-**解决方法**:
-
-1. 重新运行 `gac`
-2. 选择 "[e] Edit this message"
-3. 确保保存非空内容
-4. 或者直接使用 "[y] Use this message"
-
-#### 问题 6：Diff too large
-
-**症状**: 较大的 diff 可能影响 AI 生成质量
-
-**解决方法**:
-
-1. **分批提交**：
-   ```bash
-   # 只提交部分文件
-git add src/components/*.jsx
-gac
-
-git add src/utils/*.js
-gac
-```
-
-2. **调整 MAX_DIFF_LINES**：
-   ```bash
-   # 在 ~/.config/gac.conf 中
-   MAX_DIFF_LINES=1000
-   ```
-
-3. **使用交互式 add**：
-   ```bash
-   git add -p  # 逐个补丁添加，选择重要的更改
-   gac
-   ```
-
-#### 问题 7：jq 或 curl 未找到
-
-**症状**: 运行 `gac` 后显示 "jq: command not found" 或 "curl: command not found"
-
-**解决方法**:
-
-```bash
-# Ubuntu/Debian
-sudo apt update && sudo apt install jq curl
-
-# macOS
-brew install jq curl
-
-# CentOS/RHEL
-sudo yum install jq curl
-
-# 验证安装
-jq --version
-curl --version
-```
-
-### 高级调试
-
-#### 启用详细输出
-
-```bash
-# 使用 bash -x 查看详细执行过程
-bash -x $(which gac) 2>&1 | less
-
-# 查看配置文件加载
-bash -x $(which gac) --config
-```
-
-#### 测试 API 连接
-
-```bash
-# 创建一个测试脚本
-cat > test_api.sh << 'EOF'
-#!/bin/bash
-source ~/.config/gac.conf
-
-echo "Testing API connection to: $AI_API_URL"
-echo "Using model: $AI_MODEL"
-
-# 测试请求
-response=$(curl -s "${AI_API_URL}" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ${AI_API_KEY}" \
-  -d '{
-    "model": '""$AI_MODEL""',
-    "messages": [{"role": "user", "content": "Say 'hello'"}],
-    "max_tokens": 10
-  }')
-
-echo "Response: $response"
-echo ""
-echo "Parsed message: $(echo "$response" | jq -r '.choices[0].message.content // .content // "Failed"' 2>/dev/null)"
-EOF
-
-chmod +x test_api.sh
-./test_api.sh
-```
-
-#### 检查配置文件
-
-```bash
-# 验证配置文件存在且可读
-ls -la ~/.config/gac.conf
-
-# 查看配置文件内容
-cat ~/.config/gac.conf
-
-# 测试配置文件语法
-bash -n ~/.config/gac.conf
-
-# 验证变量设置
-source ~/.config/gac.conf
-echo "URL: $AI_API_URL"
-echo "Model: $AI_MODEL"
-echo "Language: $LANGUAGE"
-```
-
-### 性能优化
-
-#### 加快 commit 速度
-
-1. **使用更快的模型**：
-   ```bash
-   # 在 ~/.config/gac.conf 中
-   AI_MODEL="gpt-3.5-turbo"  # 比 gpt-4 更快
-   ```
-
-2. **减少 MAX_DIFF_LINES**：
-   ```bash
-   MAX_DIFF_LINES=300  # 减少发送的数据量
-   ```
-
-3. **使用 Claude CLI**（本地运行更快）：
-   ```bash
-   USE_CLAUDE_CLI=true
-   ```
-
-#### 缓存配置
-
-在 `~/.bashrc` 或 `~/.zshrc` 中预加载配置：
-
-```bash
-# 预加载 GAC 配置（如果在 git 仓库中）
-if [[ -f ~/.config/gac.conf ]] && [[ -d .git ]]; then
-    source ~/.config/gac.conf
-fi
-```
+遇到问题？查看 [USAGE_GUIDE.md](USAGE_GUIDE.md#九故障排查) 获取详细的故障排查指南。
+
+常见问题：
+- 🔧 AI 模型没有响应
+- 🔧 `gac` 命令未找到
+- 🔧 No staged changes
+- 🔧 Not a git repository
+- 🔧 jq/curl 命令未找到
+
+查看完整指南了解详细解决方案和调试技巧。
 
 ## 🤝 贡献指南
 
