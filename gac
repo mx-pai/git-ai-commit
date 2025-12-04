@@ -25,19 +25,19 @@ fi
 
 # Function to print colored messages
 print_error() {
-    echo -e "${RED} Error: $1${NC}" >&2
+    echo -e "${RED}❌ Error: $1${NC}" >&2
 }
 
 print_success() {
-    echo -e "${GREEN} $1${NC}"
+    echo -e "${GREEN}✅ $1${NC}" >&2
 }
 
 print_info() {
-    echo -e "${BLUE} $1${NC}"
+    echo -e "${BLUE}ℹ️  $1${NC}" >&2
 }
 
 print_warning() {
-    echo -e "${YELLOW} $1${NC}"
+    echo -e "${YELLOW}⚠️  $1${NC}" >&2
 }
 
 # Function to check if we're in a git repository
@@ -194,23 +194,23 @@ call_ai_model() {
 confirm_commit() {
     local commit_msg="$1"
 
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo -e "${GREEN}Generated Commit Message:${NC}"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "$commit_msg"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
+    echo "" >&2
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+    echo -e "${GREEN}Generated Commit Message:${NC}" >&2
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+    echo "$commit_msg" >&2
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+    echo "" >&2
 
-    echo "Options:"
-    echo "  [y] Use this message"
-    echo "  [e] Edit this message"
-    echo "  [r] Regenerate message"
-    echo "  [n] Cancel"
-    echo ""
+    echo "Options:" >&2
+    echo "  [y] Use this message" >&2
+    echo "  [e] Edit this message" >&2
+    echo "  [r] Regenerate message" >&2
+    echo "  [n] Cancel" >&2
+    echo "" >&2
 
     read -p "Your choice: " -n 1 -r choice
-    echo ""
+    echo "" >&2
 
     case $choice in
         y|Y)
@@ -308,7 +308,7 @@ main() {
 
     # Show diff stats
     print_info "$(get_diff_stats)"
-    echo ""
+    echo "" >&2
 
     # Get diff
     local diff=$(get_optimized_diff)
@@ -316,7 +316,7 @@ main() {
     # Generate commit message (with retry option)
     local attempt=0
     while true; do
-        ((attempt++))
+        ((++attempt))
 
         if [[ $attempt -gt 1 ]]; then
             print_info "Regenerating... (attempt $attempt)"
