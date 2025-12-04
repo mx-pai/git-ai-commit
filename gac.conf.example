@@ -1,27 +1,79 @@
 # GAC (Git AI Commit) Configuration File
 # Copy this file to ~/.config/gac.conf and customize as needed
+#
+# 配置说明：
+# - 支持多种 AI 模型和提供商，通过取消对应章节的注释来启用
+# - 支持 OpenAI 兼容接口、Claude CLI 和自定义服务
+# - 可在运行时通过环境变量覆盖配置
 
 # ============================================================================
-# AI Model Configuration
+# AI Model Configuration (Choose ONE section below)
 # ============================================================================
 
-# Option 1: Use Claude CLI (recommended if you have claude CLI installed)
-# Uncomment and set these if using Claude CLI
-# USE_CLAUDE_CLI=true
-# ANTHROPIC_AUTH_TOKEN="your-api-key-here"
-# ANTHROPIC_BASE_URL="https://open.bigmodel.cn/api/anthropic"  # or your custom endpoint
-# ANTHROPIC_MODEL="GLM-4-Plus"  # or any model you prefer
+# =======================================
+# Section 1: Claude CLI (推荐已安装 claude 命令的用户)
+# =======================================
+# 使用 Claude CLI 可以直接调用各种 Claude 模型
+#USE_CLAUDE_CLI=true
+#ANTHROPIC_AUTH_TOKEN="sk-ant-xxx"  # 可选：API 密钥
+#ANTHROPIC_BASE_URL="https://api.anthropic.com"  # 可选：自定义端点
+#ANTHROPIC_MODEL="claude-3-5-sonnet-20241022"  # 可选：指定模型
 
-# Option 2: Use Direct API Call (OpenAI-compatible endpoints)
-# Uncomment and set these if using direct API calls
-# AI_API_URL="https://api.openai.com/v1/chat/completions"
-# AI_API_KEY="your-api-key-here"
-# AI_MODEL="gpt-4"
+# =======================================
+# Section 2: OpenAI API (官方)
+# =======================================
+# 使用 OpenAI 官方 API
+#AI_API_URL="https://api.openai.com/v1/chat/completions"
+#AI_API_KEY="sk-xxx"
+#AI_MODEL="gpt-4o-mini"  # 可选：gpt-4, gpt-4o, gpt-3.5-turbo 等
 
-# Example for Yunwu AI (OpenAI compatible)
-# AI_API_URL="https://yunwu.ai/v1/chat/completions"
-# AI_API_KEY="sk-..."
-# AI_MODEL="gpt-4o-mini"
+# =======================================
+# Section 3: Azure OpenAI Service
+# =======================================
+# 使用微软 Azure OpenAI 服务
+#AI_API_URL="https://YOUR_RESOURCE.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT/chat/completions?api-version=2024-08-01-preview"
+#AI_API_KEY="your-azure-api-key"
+#AI_MODEL="gpt-4o-mini"  # 根据部署的模型名称填写
+
+# =======================================
+# Section 4: DeepSeek (深度求索)
+# =======================================
+# 使用 DeepSeek API，支持 deepseek-chat, deepseek-coder 等
+#AI_API_URL="https://api.deepseek.com/v1/chat/completions"
+#AI_API_KEY="sk-xxx"
+#AI_MODEL="deepseek-chat"  # 或 deepseek-coder
+
+# =======================================
+# Section 5: 云雾AI
+# =======================================
+# 支持多种模型，性价比高，适合中文用户
+AI_API_URL="https://yunwu.ai/v1/chat/completions"
+AI_API_KEY="sk-xxx"
+AI_MODEL="gpt-4o-mini"  # 支持: gpt-4, gpt-4o, claude-3.5-sonnet, deepseek-chat 等
+
+# =======================================
+# Section 6: 硅基流动 (SiliconFlow)
+# =======================================
+# 国内 AI 模型平台，支持多种开源模型
+#AI_API_URL="https://api.siliconflow.cn/v1/chat/completions"
+#AI_API_KEY="sk-xxx"
+#AI_MODEL="deepseek-ai/DeepSeek-V2.5"  # 支持多种开源模型
+
+# =======================================
+# Section 7: 本地部署 (Ollama/LMStudio)
+# =======================================
+# 使用本地部署的模型，无网络依赖，数据更安全
+#AI_API_URL="http://localhost:11434/v1/chat/completions"  # Ollama 默认地址
+#AI_API_KEY="ollama"  # Ollama 不需要密钥，可填任意值
+#AI_MODEL="qwen2.5-coder:7b"  # 或 llama3.1, deepseek-coder-v2 等
+
+# =======================================
+# Section 8: 自定义 OpenAI 兼容服务
+# =======================================
+# 支持任何 OpenAI 兼容的 API 服务
+#AI_API_URL="https://your-custom-api.com/v1/chat/completions"
+#AI_API_KEY="your-api-key"
+#AI_MODEL="your-model-name"
 
 # ============================================================================
 # Commit Message Settings

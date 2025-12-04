@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# gac (Git AI Commit) - AI-powered Git commit message generator
+# gac (Git AI Commit) - generate Git commit messages from staged changes
 # Usage: gac [options]
 # Author: mx-pai
 
@@ -26,19 +26,19 @@ fi
 
 # Function to print colored messages
 print_error() {
-    echo -e "${RED}❌ Error: $1${NC}" >&2
+    echo -e "${RED}ERROR: $1${NC}" >&2
 }
 
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}" >&2
+    echo -e "${GREEN}SUCCESS: $1${NC}" >&2
 }
 
 print_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}" >&2
+    echo -e "${BLUE}INFO: $1${NC}" >&2
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}" >&2
+    echo -e "${YELLOW}WARN: $1${NC}" >&2
 }
 
 # Function to check if we're in a git repository
@@ -145,48 +145,104 @@ call_ai_model() {
     local prompt="$1"
     local response=""
 
-    # Check if using claude CLI
-    if command -v claude &> /dev/null && [[ -n "${USE_CLAUDE_CLI:-}" ]]; then
-        print_info "Using Claude CLI..."
+    # 获取配置（支持环境变量覆盖）
+    local use_claude="${USE_CLAUDE_CLI:-}"
+    local api_url="${AI_API_URL:-}"
+    local api_key="${AI_API_KEY:-}"
+    local model="${AI_MODEL:-}"
 
-        # Set environment variables if configured
-        if [[ -n "${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
-            export ANTHROPIC_AUTH_TOKEN
-        fi
-        if [[ -n "${ANTHROPIC_BASE_URL:-}" ]]; then
-            export ANTHROPIC_BASE_URL
-        fi
-        if [[ -n "${ANTHROPIC_MODEL:-}" ]]; then
-            export ANTHROPIC_MODEL
-        fi
-
-        response=$(echo "$prompt" | claude --dangerously-skip-permissions 2>/dev/null || true)
-    # Check if using direct API call
-    elif [[ -n "${AI_API_URL:-}" ]] && [[ -n "${AI_API_KEY:-}" ]]; then
-        print_info "Using API endpoint: ${AI_API_URL}..."
-
-        local api_model="${AI_MODEL:-gpt-3.5-turbo}"
-
-        # Prepare JSON payload
-        local json_payload=$(jq -n \
-            --arg model "$api_model" \
-            --arg prompt "$prompt" \
-            '{model: $model, messages: [{role: "user", content: $prompt}]}')
-
-        # Call API
-        response=$(curl -s "${AI_API_URL}" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${AI_API_KEY}" \
-            -d "$json_payload" | \
-            jq -r '.choices[0].message.content // .content // empty' 2>/dev/null || true)
-    else
-        print_error "No AI model configured. Please set up your configuration in ${CONFIG_FILE}"
-        print_info "See documentation for setup instructions."
+    # 检查是否有任何 AI 配置
+    if [[ -z "$use_claude" && (-z "$api_url" || -z "$api_key") ]]; then
+        print_error "No AI model configured."
+        print_info "你可以通过以下方式配置："
+        print_info "1. 编辑配置文件: ${CONFIG_FILE}"
+        print_info "2. 使用环境变量: export AI_API_URL='your-url' && export AI_API_KEY='your-key'"
+        print_info "3. 查看配置示例: gac.conf.example"
         exit 1
     fi
 
-    if [[ -z "$response" ]]; then
-        print_error "Failed to get response from AI model"
+    # 方式 1：使用 Claude CLI
+    if [[ -n "$use_claude" ]] && command -v claude &> /dev/null; then
+        print_info "Using Claude CLI..."
+
+        # 设置环境变量
+        [[ -n "${ANTHROPIC_AUTH_TOKEN:-}" ]] && export ANTHROPIC_AUTH_TOKEN
+        [[ -n "${ANTHROPIC_BASE_URL:-}" ]] && export ANTHROPIC_BASE_URL
+        [[ -n "${ANTHROPIC_MODEL:-}" ]] && export ANTHROPIC_MODEL
+
+        response=$(echo "$prompt" | claude --dangerously-skip-permissions 2>/dev/null || true)
+
+        if [[ -z "$response" ]]; then
+            print_error "Claude CLI failed. Please check:"
+            print_info "1. Claude CLI is installed: pip install claude-cli"
+            print_info "2. API credentials are configured correctly"
+            print_info "3. Try running: echo 'test' | claude"
+            exit 1
+        fi
+
+    # 方式 2：使用 OpenAI 兼容 API
+    elif [[ -n "$api_url" && -n "$api_key" ]]; then
+        # 自动选择默认模型
+        if [[ -z "$model" ]]; then
+            # 根据 URL 推断模型
+            if [[ "$api_url" == *"deepseek.com"* ]]; then
+                model="deepseek-chat"
+            elif [[ "$api_url" == *"openai.com"* ]]; then
+                model="gpt-4o-mini"
+            elif [[ "$api_url" == *"localhost"* ]] || [[ "$api_url" == *"127.0.0.1"* ]]; then
+                model="qwen2.5-coder:7b"
+            else
+                model="gpt-4o-mini"
+            fi
+        fi
+
+        print_info "Using model: ${model}"
+        print_info "API endpoint: ${api_url}"
+
+        # 准备 JSON payload
+        local json_payload
+        if [[ "$model" == *"o1"* ]] || [[ "$model" == *"o1-preview"* ]] || [[ "$model" == *"o1-mini"* ]]; then
+            # o1 系列模型使用不同的参数格式
+            json_payload=$(jq -n \
+                --arg model "$model" \
+                --arg prompt "$prompt" \
+                '{model: $model, messages: [{role: "user", content: $prompt}], max_completion_tokens: 2000}')
+        else
+            # 标准格式
+            json_payload=$(jq -n \
+                --arg model "$model" \
+                --arg prompt "$prompt" \
+                '{model: $model, messages: [{role: "user", content: $prompt}], temperature: 0.7, max_tokens: 2000}')
+        fi
+
+        # 调用 API
+        response=$(curl -s "$api_url" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $api_key" \
+            -d "$json_payload" 2>/dev/null | \
+            jq -r '.choices[0].message.content // .choices[0].message // .content // empty' 2>/dev/null || true)
+
+        # 检查响应
+        if [[ -z "$response" ]]; then
+            print_error "API call failed or returned empty response"
+
+            # 提供通用故障排查建议
+            if [[ "$api_url" == *"localhost"* ]] || [[ "$api_url" == *"127.0.0.1"* ]]; then
+                print_info "本地服务排查："
+                print_info "1. 检查服务是否在运行: curl $api_url"
+                print_info "2. 检查防火墙设置"
+            else
+                print_info "排查建议："
+                print_info "1. 检查网络连接: ping $(echo $api_url | cut -d'/' -f3)"
+                print_info "2. 验证 API 密钥是否正确"
+                print_info "3. 检查 API 余额或配额"
+                print_info "4. 测试 API: curl -H \"Authorization: Bearer ${api_key:0:10}...\" $api_url"
+            fi
+            exit 1
+        fi
+    else
+        print_error "无法确定 AI 调用方式"
+        print_info "请检查配置文件或环境变量设置"
         exit 1
     fi
 
@@ -265,13 +321,31 @@ Options:
   -c, --config   Show current configuration
 
 Configuration:
-  Edit ${CONFIG_FILE} to customize settings
+  Configuration can be set via file or environment variables:
 
-Examples:
+  Config file: ${CONFIG_FILE}
+
+  Environment variables:
+    AI_API_URL              API endpoint URL (required for API mode)
+    AI_API_KEY              API authentication key (required for API mode)
+    AI_MODEL                Model name (optional)
+    USE_CLAUDE_CLI          Set to true to use Claude CLI (optional)
+    LANGUAGE                Commit message language: zh/en (optional)
+    COMMIT_FORMAT           Message format: conventional/simple (optional)
+    EDITOR                  Editor for editing messages (optional)
+
+  Examples:
+  # Basic usage
   git add .
   gac
 
-For more information, see the README.
+  # Use specific model
+  AI_MODEL="your-model-name" gac
+
+  # Use local model
+  AI_API_URL="http://localhost:11434/v1/chat/completions" AI_MODEL="your-local-model-name" gac
+
+For more information, see README.md or USAGE_GUIDE.md
 EOF
 }
 
@@ -279,12 +353,40 @@ EOF
 show_config() {
     if [[ ! -f "$CONFIG_FILE" ]]; then
         print_warning "No configuration file found at ${CONFIG_FILE}"
-        print_info "Copy the example config to get started"
-        return
+        print_info "Copy the example config to get started:"
+        print_info "  cp ${PWD}/gac.conf.example ${CONFIG_FILE}"
+        print_info "  nano ${CONFIG_FILE}"
+    else
+        print_info "Current configuration from ${CONFIG_FILE}:"
+        cat "$CONFIG_FILE"
     fi
 
-    print_info "Current configuration from ${CONFIG_FILE}:"
-    cat "$CONFIG_FILE"
+    echo ""
+    print_info "Environment variables (will override config file):"
+    echo "  AI_API_URL: ${AI_API_URL:-<not set>}"
+    if [[ -n "${AI_API_KEY:-}" ]]; then
+        echo "  AI_API_KEY: ${AI_API_KEY:0:10}...<set>"
+    else
+        echo "  AI_API_KEY: <not set>"
+    fi
+    echo "  AI_MODEL: ${AI_MODEL:-<not set>}"
+    echo "  USE_CLAUDE_CLI: ${USE_CLAUDE_CLI:-<not set>}"
+    echo "  LANGUAGE: ${LANGUAGE:-<not set>}"
+    echo "  COMMIT_FORMAT: ${COMMIT_FORMAT:-<not set>}"
+
+    echo ""
+    print_info "Available AI providers detected:"
+    if [[ -n "${USE_CLAUDE_CLI:-}" ]] && command -v claude &> /dev/null; then
+        echo "  Claude CLI (configured and available)"
+    elif command -v claude &> /dev/null; then
+        echo "  Claude CLI (available but not configured)"
+    fi
+
+    if [[ -n "${AI_API_URL:-}" ]] && [[ -n "${AI_API_KEY:-}" ]]; then
+        echo "  OpenAI-compatible API (configured)"
+        echo "    Endpoint: ${AI_API_URL}"
+        echo "    Model: ${AI_MODEL:-<auto-detect>}"
+    fi
 }
 
 # Main function
