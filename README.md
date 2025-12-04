@@ -40,7 +40,7 @@ chmod +x install.sh
 ```bash
 AI_API_URL="https://yunwu.ai/v1/chat/completions"
 AI_API_KEY="sk-..."
-AI_MODEL="gpt-4o-mini"
+AI_MODEL="***"
 ```
 
 #### 方式 2：使用 Claude CLI

@@ -2,7 +2,7 @@
 
 # Installation script for gac (Git AI Commit)
 # Usage: ./install.sh [uninstall]
-
+# Author: mx-pai
 set -euo pipefail
 
 GREEN='\033[0;32m'
