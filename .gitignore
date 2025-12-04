@@ -1,0 +1,40 @@
+# Ignore personal configuration files
+.gac.conf
+*.local.conf
+*.conf.local
+
+# Ignore API keys and secrets
+.env
+.env.local
+.secrets
+
+# Ignore temporary debug files
+/tmp/gac_debug_*.json
+test_api.sh
+test_ai.sh
+
+# Ignore IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore test files
+test_*.sh
+*.test
+
+# Ignore backup files
+*.backup
+*.bak
+*.orig
+
+# Ignore log files
+*.log
+
+# Ignore Fish shell function backup
+cmt.fish.backup
