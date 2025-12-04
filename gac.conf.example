@@ -7,21 +7,21 @@
 
 # Option 1: Use Claude CLI (recommended if you have claude CLI installed)
 # Uncomment and set these if using Claude CLI
-USE_CLAUDE_CLI=true
-ANTHROPIC_AUTH_TOKEN="your-api-key-here"
-ANTHROPIC_BASE_URL="https://open.bigmodel.cn/api/anthropic"  # or your custom endpoint
-ANTHROPIC_MODEL="GLM-4-Plus"  # or any model you prefer
+# USE_CLAUDE_CLI=true
+# ANTHROPIC_AUTH_TOKEN="your-api-key-here"
+# ANTHROPIC_BASE_URL="https://open.bigmodel.cn/api/anthropic"  # or your custom endpoint
+# ANTHROPIC_MODEL="GLM-4-Plus"  # or any model you prefer
 
 # Option 2: Use Direct API Call (OpenAI-compatible endpoints)
 # Uncomment and set these if using direct API calls
 # AI_API_URL="https://api.openai.com/v1/chat/completions"
 # AI_API_KEY="your-api-key-here"
-# AI_MODEL="gpt-4"  # or gpt-3.5-turbo, etc.
+# AI_MODEL="gpt-4"
 
-# For other providers (e.g., Anthropic, DeepSeek, etc.)
-# AI_API_URL="https://api.anthropic.com/v1/messages"
-# AI_API_KEY="your-api-key-here"
-# AI_MODEL="claude-3-sonnet-20240229"
+# Example for Yunwu AI (OpenAI compatible)
+# AI_API_URL="https://yunwu.ai/v1/chat/completions"
+# AI_API_KEY="sk-..."
+# AI_MODEL="gpt-4o-mini"
 
 # ============================================================================
 # Commit Message Settings
