@@ -538,5 +538,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 联系方式
 
 - 项目地址: [https://github.com/mx2004/gac](https://github.com/mx2004/gac)
-- Issues: [提交问题](https://github.com/mx2004/gac/issues)
-- 讨论: [开始讨论](https://github.com/mx2004/gac/discussions)
+- 邮箱: xuma5668@gamil.com
